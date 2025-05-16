@@ -1,99 +1,114 @@
+import json
+import os
 from collections import defaultdict
 
-def get_matrix_input(prompt, rows, cols):
-    matrix = []
-    print(f"{prompt} (Enter {cols} space-separated integers per row):")
-    for i in range(rows):
-        while True:
-            try:
-                row = list(map(int, input(f"Row {i}: ").strip().split()))
-                if len(row) != cols:
-                    raise ValueError
-                matrix.append(row)
-                break
-            except ValueError:
-                print(f"Please enter exactly {cols} integers.")
-    return matrix
+class DeadlockDetector:
+    def __init__(self):
+        self.history = []
 
-def build_rag(allocation, request, num_processes, num_resources):
-    rag = defaultdict(set)
+    def build_rag(self, allocation, request, num_processes, num_resources):
+        rag = defaultdict(set)
+        step = {"step": 0, "action": "Initial Resource Allocation", "graph": {}}
 
-    for i in range(num_processes):
-        for j in range(num_resources):
-            if allocation[i][j] > 0:
-                resource_node = f"R{j}"
-                process_node = f"P{i}"
-                rag[resource_node].add(process_node)
+        for i in range(num_processes):
+            for j in range(num_resources):
+                if allocation[i][j] > 0:
+                    rag[f"R{j}"].add(f"P{i}")
 
-            if request[i][j] > 0:
-                resource_node = f"R{j}"
-                process_node = f"P{i}"
-                rag[process_node].add(resource_node)
+        step["graph"] = {k: list(v) for k, v in rag.items()}
+        self.history.append(step)
 
-    return rag
+        for i in range(num_processes):
+            for j in range(num_resources):
+                if request[i][j] > 0:
+                    rag[f"P{i}"].add(f"R{j}")
+                    self.history.append({
+                        "step": len(self.history),
+                        "action": f"P{i} requested R{j}",
+                        "graph": {k: list(v) for k, v in rag.items()}
+                    })
 
-def convert_rag_to_wfg(rag):
-    wfg = defaultdict(set)
+        return rag
 
-    for node in rag:
-        if node.startswith('P'):
-            for neighbor in rag[node]:
-                if neighbor.startswith('R'):
-                    for holder in rag.get(neighbor, []):
-                        if holder != node:
-                            wfg[node].add(holder)
+    def convert_rag_to_wfg(self, rag):
+        wfg = defaultdict(set)
 
-    return wfg
+        for process in rag:
+            if process.startswith("P"):
+                for resource in rag[process]:
+                    if resource.startswith("R"):
+                        for holder in rag.get(resource, []):
+                            if holder != process:
+                                wfg[process].add(holder)
 
-def detect_cycle(wfg):
-    visited = set()
-    rec_stack = set()
+        self.history.append({
+            "step": len(self.history),
+            "action": "Converted RAG to WFG",
+            "graph": {k: list(v) for k, v in wfg.items()}
+        })
 
-    def dfs(process):
-        visited.add(process)
-        rec_stack.add(process)
-        for neighbor in wfg.get(process, []):
-            if neighbor not in visited:
-                if dfs(neighbor):
+        return wfg
+
+    def detect_cycle(self, wfg):
+        visited = set()
+        rec_stack = []
+        cycle_nodes = set()
+
+        def dfs(process):
+            visited.add(process)
+            rec_stack.append(process)
+            for neighbor in wfg.get(process, []):
+                if neighbor not in visited:
+                    if dfs(neighbor):
+                        return True
+                elif neighbor in rec_stack:
+                    cycle_start = rec_stack.index(neighbor)
+                    cycle_nodes.update(rec_stack[cycle_start:])
                     return True
-            elif neighbor in rec_stack:
-                return True
-        rec_stack.remove(process)
-        return False
+            rec_stack.pop()
+            return False
 
-    for process in wfg:
-        if process not in visited:
-            if dfs(process):
-                return True
-    return False
+        for process in wfg:
+            if process not in visited:
+                if dfs(process):
+                    break
 
-def is_deadlocked(allocation, request, available):
+        self.history.append({
+            "step": len(self.history),
+            "action": (
+                f"Cycle Detected: {' -> '.join(cycle_nodes)}"
+                if cycle_nodes else "No cycle found"
+            ),
+            "graph": {k: list(v) for k, v in wfg.items()}
+        })
+
+        return bool(cycle_nodes), cycle_nodes
+
+    def save_to_file(self, simulation_id):
+        data = []
+        filename = "deadlock_simulations.json"
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = []
+
+        data.append({"simulation_id": simulation_id, "steps": self.history})
+
+        with open(filename, "w") as f:
+            json.dump(data, f, indent=4)
+
+        return filename
+
+def run_deadlock_detection(available, allocation, request, simulation_id="sim"):
+    detector = DeadlockDetector()
     num_processes = len(allocation)
     num_resources = len(available)
 
-    rag = build_rag(allocation, request, num_processes, num_resources)
-    print("\nResource Allocation Graph (RAG):")
-    for node, edges in rag.items():
-        print(f"{node} -> {list(edges)}")
+    rag = detector.build_rag(allocation, request, num_processes, num_resources)
+    wfg = detector.convert_rag_to_wfg(rag)
+    deadlocked, cycle_nodes = detector.detect_cycle(wfg)
+    path = detector.save_to_file(simulation_id)
 
-    wfg = convert_rag_to_wfg(rag)
-    print("\nWait-For Graph (WFG):")
-    for node, edges in wfg.items():
-        print(f"{node} -> {list(edges)}")
-
-    return detect_cycle(wfg)
-
-def run_deadlock_detection(available, allocation, request):
-    print("\nInputs:")
-    print("Available:", available)
-    print("Allocation Matrix:")
-    for row in allocation:
-        print(row)
-    print("Request Matrix:")
-    for row in request:
-        print(row)
-
-    if is_deadlocked(allocation, request, available):
-        print("\n⚠️  Deadlock detected.")
-    else:
-        print("\n✅ No deadlock detected.")
+    return deadlocked, cycle_nodes, path
