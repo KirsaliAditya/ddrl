@@ -167,5 +167,320 @@
                 }
             }
         ]
+    },
+    {
+        "simulation_id": "wfg_sim",
+        "steps": [
+            {
+                "step": 0,
+                "action": "Initial Resource Allocation",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P3"
+                    ],
+                    "R0": [
+                        "P1",
+                        "P2",
+                        "P3"
+                    ],
+                    "R2": [
+                        "P4",
+                        "P2",
+                        "P3"
+                    ]
+                }
+            },
+            {
+                "step": 1,
+                "action": "P1 requested R0",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P3"
+                    ],
+                    "R0": [
+                        "P1",
+                        "P2",
+                        "P3"
+                    ],
+                    "R2": [
+                        "P4",
+                        "P2",
+                        "P3"
+                    ],
+                    "P1": [
+                        "R0"
+                    ]
+                }
+            },
+            {
+                "step": 2,
+                "action": "P1 requested R2",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P3"
+                    ],
+                    "R0": [
+                        "P1",
+                        "P2",
+                        "P3"
+                    ],
+                    "R2": [
+                        "P4",
+                        "P2",
+                        "P3"
+                    ],
+                    "P1": [
+                        "R0",
+                        "R2"
+                    ]
+                }
+            },
+            {
+                "step": 3,
+                "action": "P3 requested R0",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P3"
+                    ],
+                    "R0": [
+                        "P1",
+                        "P2",
+                        "P3"
+                    ],
+                    "R2": [
+                        "P4",
+                        "P2",
+                        "P3"
+                    ],
+                    "P1": [
+                        "R0",
+                        "R2"
+                    ],
+                    "P3": [
+                        "R0"
+                    ]
+                }
+            },
+            {
+                "step": 4,
+                "action": "P4 requested R2",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P3"
+                    ],
+                    "R0": [
+                        "P1",
+                        "P2",
+                        "P3"
+                    ],
+                    "R2": [
+                        "P4",
+                        "P2",
+                        "P3"
+                    ],
+                    "P1": [
+                        "R0",
+                        "R2"
+                    ],
+                    "P3": [
+                        "R0"
+                    ],
+                    "P4": [
+                        "R2"
+                    ]
+                }
+            },
+            {
+                "step": 5,
+                "action": "Converted RAG to WFG",
+                "graph": {
+                    "P1": [
+                        "P4",
+                        "P2",
+                        "P3"
+                    ],
+                    "P3": [
+                        "P1",
+                        "P2"
+                    ],
+                    "P4": [
+                        "P2",
+                        "P3"
+                    ]
+                }
+            },
+            {
+                "step": 6,
+                "action": "Cycle Detected: P1 -> P4 -> P3",
+                "graph": {
+                    "P1": [
+                        "P4",
+                        "P2",
+                        "P3"
+                    ],
+                    "P3": [
+                        "P1",
+                        "P2"
+                    ],
+                    "P4": [
+                        "P2",
+                        "P3"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "simulation_id": "wfg_sim",
+        "steps": [
+            {
+                "step": 0,
+                "action": "Initial Resource Allocation",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P2"
+                    ],
+                    "R0": [
+                        "P2",
+                        "P1"
+                    ],
+                    "R2": [
+                        "P1"
+                    ]
+                }
+            },
+            {
+                "step": 1,
+                "action": "P0 requested R0",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P2"
+                    ],
+                    "R0": [
+                        "P2",
+                        "P1"
+                    ],
+                    "R2": [
+                        "P1"
+                    ],
+                    "P0": [
+                        "R0"
+                    ]
+                }
+            },
+            {
+                "step": 2,
+                "action": "P0 requested R2",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P2"
+                    ],
+                    "R0": [
+                        "P2",
+                        "P1"
+                    ],
+                    "R2": [
+                        "P1"
+                    ],
+                    "P0": [
+                        "R0",
+                        "R2"
+                    ]
+                }
+            },
+            {
+                "step": 3,
+                "action": "P1 requested R1",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P2"
+                    ],
+                    "R0": [
+                        "P2",
+                        "P1"
+                    ],
+                    "R2": [
+                        "P1"
+                    ],
+                    "P0": [
+                        "R0",
+                        "R2"
+                    ],
+                    "P1": [
+                        "R1"
+                    ]
+                }
+            },
+            {
+                "step": 4,
+                "action": "P2 requested R2",
+                "graph": {
+                    "R1": [
+                        "P0",
+                        "P2"
+                    ],
+                    "R0": [
+                        "P2",
+                        "P1"
+                    ],
+                    "R2": [
+                        "P1"
+                    ],
+                    "P0": [
+                        "R0",
+                        "R2"
+                    ],
+                    "P1": [
+                        "R1"
+                    ],
+                    "P2": [
+                        "R2"
+                    ]
+                }
+            },
+            {
+                "step": 5,
+                "action": "Converted RAG to WFG",
+                "graph": {
+                    "P0": [
+                        "P2",
+                        "P1"
+                    ],
+                    "P1": [
+                        "P0",
+                        "P2"
+                    ],
+                    "P2": [
+                        "P1"
+                    ]
+                }
+            },
+            {
+                "step": 6,
+                "action": "Cycle Detected: P0 -> P1 -> P2",
+                "graph": {
+                    "P0": [
+                        "P2",
+                        "P1"
+                    ],
+                    "P1": [
+                        "P0",
+                        "P2"
+                    ],
+                    "P2": [
+                        "P1"
+                    ]
+                }
+            }
+        ]
     }
 ]
