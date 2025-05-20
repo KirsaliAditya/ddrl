@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Any, Dict
+from typing import List
 from matrix import is_deadlocked
 from rag_wfg import run_deadlock_detection
+import json
 
 app = FastAPI()
 
@@ -27,15 +28,18 @@ def matrix_simulation(input_data: MatrixInput):
             input_data.request,
             input_data.simulation_id
         )
-        # Optionally, load the last simulation steps from file
+
+        # Load the simulation steps from the log file
         with open("matrix_simulations.json", "r") as f:
-            simulations = [sim for sim in __import__('json').load(f) if sim["simulation_id"] == input_data.simulation_id]
+            simulations = json.load(f)
+            matching_sim = next((sim for sim in simulations if sim["simulation_id"] == input_data.simulation_id), None)
+
         return {
             "deadlocked": deadlocked,
-            "simulation": simulations[-1] if simulations else None
+            "simulation": matching_sim
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Matrix deadlock check failed: {str(e)}")
 
 @app.post("/api/wfg")
 def wfg_simulation(input_data: WFGInput):
@@ -46,13 +50,16 @@ def wfg_simulation(input_data: WFGInput):
             input_data.request,
             input_data.simulation_id
         )
-        # Optionally, load the last simulation steps from file
+
+        # Load the simulation steps from the log file
         with open("deadlock_simulations.json", "r") as f:
-            simulations = [sim for sim in __import__('json').load(f) if sim["simulation_id"] == input_data.simulation_id]
+            simulations = json.load(f)
+            matching_sim = next((sim for sim in simulations if sim["simulation_id"] == input_data.simulation_id), None)
+
         return {
             "deadlocked": deadlocked,
             "cycle_nodes": list(cycle_nodes),
-            "simulation": simulations[-1] if simulations else None
+            "simulation": matching_sim
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"WFG deadlock check failed: {str(e)}")

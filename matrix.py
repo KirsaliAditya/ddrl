@@ -9,13 +9,26 @@ def is_deadlocked(available, allocation, request, simulation_id="matrix_sim"):
     finish = [False] * n
     history = []
 
+    def format_graph():
+        graph = {}
+        for i in range(n):
+            pi = f"P{i}"
+            graph[pi] = []
+            for j in range(m):
+                if request[i][j] > 0:
+                    graph[pi].append(f"R{j}")  # P → R (request)
+            for j in range(m):
+                if allocation[i][j] > 0:
+                    rj = f"R{j}"
+                    if rj not in graph:
+                        graph[rj] = []
+                    graph[rj].append(pi)  # R → P (allocation)
+        return graph
+
     history.append({
         "step": 0,
         "action": "Initial State",
-        "available": available,
-        "allocation": allocation,
-        "request": request,
-        "finish": finish.copy()
+        "graph": format_graph()
     })
 
     step = 1
@@ -23,6 +36,7 @@ def is_deadlocked(available, allocation, request, simulation_id="matrix_sim"):
         made_progress = False
         for i in range(n):
             if not finish[i] and all(request[i][j] <= work[j] for j in range(m)):
+                # Process P_i can finish
                 for j in range(m):
                     work[j] += allocation[i][j]
                 finish[i] = True
@@ -30,20 +44,19 @@ def is_deadlocked(available, allocation, request, simulation_id="matrix_sim"):
 
                 history.append({
                     "step": step,
-                    "action": f"Process P{i} can finish. Resources released.",
-                    "work": work.copy(),
-                    "finish": finish.copy()
+                    "action": f"P{i} can finish. Resources released.",
+                    "graph": format_graph()
                 })
                 step += 1
         if not made_progress:
             break
 
     deadlocked = any(not f for f in finish)
+
     history.append({
         "step": step,
-        "action": "Deadlock Check Completed",
-        "result": "Deadlock Detected" if deadlocked else "No Deadlock",
-        "final_finish": finish
+        "action": "Deadlock Check Completed - " + ("Deadlock Detected" if deadlocked else "No Deadlock"),
+        "graph": format_graph()
     })
 
     save_simulation(history, simulation_id)
